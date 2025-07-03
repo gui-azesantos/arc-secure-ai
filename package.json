@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "formdata-node": "^6.0.3",
+    "html2pdf.js": "^0.10.3",
     "next": "15.3.4",
     "openai": "^5.8.2",
     "react": "^19.0.0",

@@ -1,35 +1,34 @@
-import { FormData, File as FormDataFile } from "formdata-node";
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function extractComponentsFromImage(file: File): Promise<any> {
   const buffer = await file.arrayBuffer();
-  const formData = new FormData();
-
-  formData.set(
-    "file",
-    new FormDataFile(Buffer.from(buffer), file.name, { type: file.type })
-  );
-
   const base64Image = Buffer.from(buffer).toString("base64");
 
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      Authorization: `Bearer `,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "gpt-4-vision-preview",
+      model: "gpt-4o",
       messages: [
         {
           role: "user",
           content: [
             {
               type: "text",
-              text: `Você é um especialista em segurança de software. A imagem a seguir contém um diagrama de arquitetura de sistema. Por favor, identifique os componentes presentes nela e retorne como um JSON estruturado com os seguintes campos:
-- nome
-- tipo (ex: usuário, servidor, API, banco de dados, etc)
-- breve descrição funcional`,
+              text: `A imagem a seguir contém um diagrama de arquitetura de software. Extraia os componentes presentes e responda **exclusivamente** com um array JSON no seguinte formato:
+
+  [
+    {
+    "nome": "string",
+    "tipo": "usuário | servidor | banco de dados | API | processo | sistema | outro",
+    "descricao": "breve descrição da função ou papel do componente no sistema"
+    },
+    ...
+  ]
+
+  Não escreva nenhuma explicação. Responda apenas com o JSON.`,
             },
             {
               type: "image_url",
@@ -40,12 +39,12 @@ export async function extractComponentsFromImage(file: File): Promise<any> {
           ],
         },
       ],
-      max_tokens: 1500,
+      max_tokens: 2000,
     }),
   });
 
   const data = await res.json();
-  const content = data.choices[0].message.content;
+  const content = data.choices?.[0]?.message?.content;
 
   try {
     const parsed = JSON.parse(content);
