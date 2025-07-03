@@ -26,7 +26,7 @@ Responda apenas com o JSON. Não inclua explicações.
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
-      Authorization: `Bearer `,
+      Authorization: `Bearer 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`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -42,8 +42,6 @@ Responda apenas com o JSON. Não inclua explicações.
   });
 
   const data = await res.json();
-  console.log("Resposta da API:", data);
-
   const content = data.choices?.[0]?.message?.content;
 
   try {
