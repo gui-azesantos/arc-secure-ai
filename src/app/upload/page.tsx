@@ -4,7 +4,6 @@
 
 import { useRef, useState } from "react";
 import { ImageUploader } from "../components/ImageUploader";
-import { PdfExporter } from "../components/PdfExporter";
 import { extractComponentsFromImage } from "../lib/gpt";
 import { generateStrideReport } from "../lib/stride";
 
@@ -102,7 +101,7 @@ export default function UploadPage() {
       setError(
         "Ocorreu um erro ao processar a imagem ou gerar o relatório. Verifique o formato e a qualidade da imagem e tente novamente."
       );
-      console.error("Erro detalhado:", err);
+      console.error("Erro ao processar a imagem:", err);
       setLoadingComponents(false);
       setLoadingStride(false);
     } finally {
@@ -251,14 +250,6 @@ export default function UploadPage() {
                 <h2 className="text-2xl font-bold text-teal-400">
                   Relatório de Ameaças STRIDE
                 </h2>
-                {strideReport.length > 0 && (
-                  <PdfExporter
-                    contentRef={strideReportRef}
-                    filename="relatorio-stride-seguranca.pdf"
-                    buttonText="Exportar PDF"
-                    disabled={loadingStride}
-                  />
-                )}
               </div>
               {loadingStride ? (
                 <StrideSkeletonLoader />
