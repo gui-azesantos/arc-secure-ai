@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🛡️ ArcSecure AI: Análise de Segurança de Arquitetura com IA
 
-## Getting Started
+## 🚀 Sobre o Projeto
 
-First, run the development server:
+O **ArcSecure AI** é um projeto desenvolvido como parte do curso de Pós-Graduação em Inteligência Artificial da FIAP. Ele explora a aplicação de técnicas de IA para aprimorar a segurança de sistemas, focando na **análise automatizada de diagramas de arquitetura de software**.
+
+A ferramenta visa identificar proativamente vulnerabilidades de segurança utilizando o reconhecido modelo **STRIDE** (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation of Privilege), oferecendo uma abordagem inovadora para fortalecer a resiliência de aplicações desde as etapas iniciais de design.
+
+Este projeto demonstra a capacidade da IA em **automatizar e escalar processos complexos de segurança**, tornando a análise de ameaças mais acessível e eficiente para arquitetos, desenvolvedores e profissionais de segurança.
+
+---
+
+## ✨ Funcionalidades
+
+- **Análise de Diagramas por IA**: Faça upload de diagramas de arquitetura (JPEG, PNG, SVG) para que a IA identifique os componentes do sistema e suas interações.
+- **Detecção de Componentes**: Reconhecimento automático e classificação de elementos como servidores, bancos de dados, gateways, filas e serviços externos.
+- **Relatório de Ameaças STRIDE**: Geração de um relatório detalhado que mapeia ameaças de segurança específicas para cada componente identificado.
+- **Contramedidas Sugeridas**: Sugestões práticas de mitigação de riscos para cada ameaça detectada.
+- **Exportação em PDF**: Baixe o relatório completo em formato PDF para documentação, auditoria e compartilhamento.
+- **Interface Intuitiva**: Design moderno, limpo e responsivo.
+
+---
+
+## 🛠️ Tecnologias
+
+### **Frontend**
+
+- **Next.js**: Framework React para construção da interface com foco em performance.
+- **React**: Biblioteca JavaScript para construção de UIs reativas.
+- **Tailwind CSS**: Framework utilitário para estilização rápida e responsiva.
+- **TypeScript**: Tipagem estática para robustez e manutenibilidade.
+
+### **Geração de PDF (Client-side)**
+
+- **jspdf**: Criação e manipulação de documentos PDF no navegador.
+- **html2canvas**: Captura de elementos HTML como imagens para inclusão no PDF.
+
+### **Integração com IA**
+
+- **Mocks para APIs de IA**: Simulação de interações com modelos de IA para fins de desenvolvimento (ex.: `lib/gpt.ts`, `lib/stride.ts`).
+- **Para uso real**: Integração prevista com:
+  - Google Cloud Vision AI
+  - Azure Computer Vision
+  - OpenAI GPT / Google Gemini
+
+---
+
+## ⚙️ Instalação e Configuração
+
+### **Pré-requisitos**
+
+- Node.js (versão 18.x ou superior)
+- npm ou Yarn
+
+### **Passos**
+
+1. Clone o repositório:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/seu-usuario/arcsecure-ai.git
+cd arcsecure-ai
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

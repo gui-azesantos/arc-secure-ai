@@ -210,11 +210,9 @@ export default function UploadPage() {
         </button>
       </section>
 
-      {/* Segundo Bloco: Resultados (Componentes e STRIDE lado a lado) */}
       {(loadingOverall || result.length > 0 || strideReport.length > 0) && (
         <section className={`w-full ${MAX_WIDTH_CLASS} animate-fade-in`}>
           <div className="flex flex-col lg:flex-row gap-8">
-            {/* Coluna de Componentes Detectados */}
             <div className="flex-1 bg-gray-800 p-6 sm:p-8 rounded-xl shadow-lg border border-gray-700">
               <h2 className="text-2xl font-bold mb-5 text-teal-400 border-b pb-3 border-gray-700">
                 Componentes Detectados
@@ -248,7 +246,6 @@ export default function UploadPage() {
               )}
             </div>
 
-            {/* Coluna de Relatório STRIDE --- ADICIONADO REF E BOTÃO DE EXPORTAÇÃO --- */}
             <div className="flex-1 bg-gray-800 p-6 sm:p-8 rounded-xl shadow-lg border border-gray-700">
               <div className="flex justify-between items-center mb-5 border-b pb-3 border-gray-700">
                 <h2 className="text-2xl font-bold text-teal-400">
@@ -266,13 +263,11 @@ export default function UploadPage() {
               {loadingStride ? (
                 <StrideSkeletonLoader />
               ) : strideReport.length > 0 ? (
-                // O conteúdo que será exportado precisa ser envolvido por esta div com a ref
                 <div
                   ref={strideReportRef}
                   className="space-y-8 p-4 bg-gray-800 rounded-lg"
                 >
                   {" "}
-                  {/* Adicionei p-4 e bg-gray-800 aqui para garantir que o conteúdo tenha um fundo para o PDF */}
                   {strideReport.map((comp, i) => (
                     <div
                       key={i}
