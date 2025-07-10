@@ -60,3 +60,21 @@ Este projeto demonstra a capacidade da IA em **automatizar e escalar processos c
 git clone https://github.com/seu-usuario/arcsecure-ai.git
 cd arcsecure-ai
 ```
+
+2. Instale as dependências:
+
+```bash
+npm install
+# ou
+yarn install
+```
+
+3. Inicie o servidor de desenvolvimento:
+
+```bash
+npm run dev
+# ou
+yarn dev
+```
+
+A aplicação estará disponível em http://localhost:3000.
