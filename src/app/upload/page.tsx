@@ -2,7 +2,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react"; // Importar useEffect
+import { useEffect, useRef, useState } from "react";
+import DiagramSketchpad from "../components/DiagramSketchpad"; // Importar o novo componente
 import { ImageUploader } from "../components/ImageUploader";
 import { extractComponentsFromImage } from "../lib/gpt";
 import { generateStrideReport } from "../lib/stride";
@@ -44,9 +45,11 @@ export default function UploadPage() {
   const [strideReportError, setStrideReportError] = useState<string | null>(
     null
   );
+  const [inputMode, setInputMode] = useState<"upload" | "sketch">("upload"); // Novo estado para o modo de entrada
 
   const strideReportRef = useRef<HTMLDivElement>(null);
 
+  // Efeito para carregar dados do sessionStorage ao montar o componente
   useEffect(() => {
     if (typeof window !== "undefined") {
       const cachedComponents = sessionStorage.getItem("cachedComponents");
@@ -73,14 +76,25 @@ export default function UploadPage() {
     }
   };
 
+  // Função para lidar com a imagem gerada pelo sketchpad
+  const handleSketchpadImageGenerated = (imageFile: File | null) => {
+    setSelectedFile(imageFile);
+    // Não processa automaticamente, aguarda o clique no botão "Analisar"
+  };
+
   const handleProcess = async () => {
     if (!selectedFile) {
-      setError("Por favor, selecione uma imagem para analisar.");
+      setError(
+        inputMode === "upload"
+          ? "Por favor, selecione uma imagem para analisar."
+          : "Por favor, gere um desenho para analisar."
+      );
       return;
     }
 
     const allowedTypes = ["image/jpeg", "image/png", "image/svg+xml"];
-    if (!allowedTypes.includes(selectedFile.type)) {
+    // Se o arquivo não veio do sketchpad (que sempre gera PNG), verifica o tipo
+    if (inputMode === "upload" && !allowedTypes.includes(selectedFile.type)) {
       setError("Formato de arquivo inválido. Por favor, use JPEG, PNG ou SVG.");
       setSelectedFile(null);
       return;
@@ -188,8 +202,9 @@ export default function UploadPage() {
           Análise de Arquitetura de Segurança
         </h1>
         <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-          Faça upload de um diagrama de arquitetura e nossa IA o ajudará a
-          identificar vulnerabilidades de segurança usando o modelo STRIDE.
+          Faça upload de um diagrama de arquitetura, ou desenhe, e nossa IA o
+          ajudará a identificar vulnerabilidades de segurança usando o modelo
+          STRIDE.
         </p>
       </header>
 
@@ -197,42 +212,81 @@ export default function UploadPage() {
         className={`bg-gray-800 p-6 sm:p-8 rounded-xl shadow-lg w-full ${MAX_WIDTH_CLASS} border border-gray-700 mb-12`}
       >
         <h2 className="text-2xl font-bold mb-6 text-teal-400 text-center">
-          Envie seu Diagrama de Arquitetura ⬆️
+          Modo de Entrada ↔️
         </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 text-center text-gray-300">
-          <div className="flex flex-col items-center p-3 rounded-md bg-gray-700/40 border border-gray-700">
-            <span className="text-teal-300 text-3xl mb-2">✨</span>
-            <p className="font-semibold mb-1">Qualidade da Imagem</p>
-            <p className="text-sm text-gray-400">
-              Certifique-se de que a imagem seja de **alta qualidade** e nítida
-              para melhor detecção.
-            </p>
-          </div>
-          <div className="flex flex-col items-center p-3 rounded-md bg-gray-700/40 border border-gray-700">
-            <span className="text-teal-300 text-3xl mb-2">📁</span>
-            <p className="font-semibold mb-1">Formatos Suportados</p>
-            <p className="text-sm text-gray-400">
-              Aceitamos **JPEG, PNG e SVG**. Escolha o formato que melhor
-              preserve os detalhes.
-            </p>
-          </div>
-          <div className="flex flex-col items-center p-3 rounded-md bg-gray-700/40 border border-gray-700">
-            <span className="text-teal-300 text-3xl mb-2">🔍</span>
-            <p className="font-semibold mb-1">Diagramas Otimizados</p>
-            <p className="text-sm text-gray-400">
-              **Diagramas claros** com componentes bem definidos otimizam a
-              precisão da IA.
-            </p>
-          </div>
+        <div className="flex justify-center space-x-4 mb-8">
+          <button
+            onClick={() => setInputMode("upload")}
+            className={`py-2 px-6 rounded-lg font-bold transition-all duration-200 ${
+              inputMode === "upload"
+                ? "bg-teal-600 text-white"
+                : "bg-gray-600 text-gray-200 hover:bg-teal-500"
+            }`}
+            disabled={loadingOverall}
+          >
+            Upload de Imagem 📁
+          </button>
+          <button
+            onClick={() => {
+              setInputMode("sketch");
+              setSelectedFile(null); // Limpa o arquivo selecionado ao mudar o modo
+              handleRemoveFile(); // Limpa resultados anteriores e cache
+            }}
+            className={`py-2 px-6 rounded-lg font-bold transition-all duration-200 ${
+              inputMode === "sketch"
+                ? "bg-teal-600 text-white"
+                : "bg-gray-600 text-gray-200 hover:bg-teal-500"
+            }`}
+            disabled={loadingOverall}
+          >
+            Desenhar Diagrama ✏️
+          </button>
         </div>
 
-        <ImageUploader
-          onImageSelected={setSelectedFile}
-          selectedFile={selectedFile}
-          onFileRemoved={handleRemoveFile}
-          disabled={loadingOverall}
-        />
+        {inputMode === "upload" ? (
+          <>
+            <h2 className="text-2xl font-bold mb-6 text-teal-400 text-center">
+              Envie seu Diagrama de Arquitetura ⬆️
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 text-center text-gray-300">
+              <div className="flex flex-col items-center p-3 rounded-md bg-gray-700/40 border border-gray-700">
+                <span className="text-teal-300 text-3xl mb-2">✨</span>
+                <p className="font-semibold mb-1">Qualidade da Imagem</p>
+                <p className="text-sm text-gray-400">
+                  Certifique-se de que a imagem seja de **alta qualidade** e
+                  nítida para melhor detecção.
+                </p>
+              </div>
+              <div className="flex flex-col items-center p-3 rounded-md bg-gray-700/40 border border-gray-700">
+                <span className="text-teal-300 text-3xl mb-2">📁</span>
+                <p className="font-semibold mb-1">Formatos Suportados</p>
+                <p className="text-sm text-gray-400">
+                  Aceitamos **JPEG, PNG e SVG**. Escolha o formato que melhor
+                  preserve os detalhes.
+                </p>
+              </div>
+              <div className="flex flex-col items-center p-3 rounded-md bg-gray-700/40 border border-gray-700">
+                <span className="text-teal-300 text-3xl mb-2">🔍</span>
+                <p className="font-semibold mb-1">Diagramas Otimizados</p>
+                <p className="text-sm text-gray-400">
+                  **Diagramas claros** com componentes bem definidos otimizam a
+                  precisão da IA.
+                </p>
+              </div>
+            </div>
+            <ImageUploader
+              onImageSelected={setSelectedFile}
+              selectedFile={selectedFile}
+              onFileRemoved={handleRemoveFile}
+              disabled={loadingOverall}
+            />
+          </>
+        ) : (
+          <DiagramSketchpad
+            onImageGenerated={handleSketchpadImageGenerated}
+            isLoading={loadingOverall}
+          />
+        )}
 
         {error && (
           <div
@@ -274,7 +328,7 @@ export default function UploadPage() {
               Analisando...
             </>
           ) : (
-            "Analisar Imagem"
+            "Analisar Diagrama" // Mudado o texto do botão
           )}
         </button>
       </section>
