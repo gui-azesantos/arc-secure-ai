@@ -239,7 +239,7 @@ export default function UploadPage() {
             }`}
             disabled={loadingOverall}
           >
-            Desenhar Diagrama ✏️
+            Desenhar Diagrama ✏️ (Beta)
           </button>
         </div>
 
