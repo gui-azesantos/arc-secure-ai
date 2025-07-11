@@ -1,8 +1,8 @@
-// app/upload/page.tsx
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useRef, useState } from "react";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react"; // Importar useEffect
 import { ImageUploader } from "../components/ImageUploader";
 import { extractComponentsFromImage } from "../lib/gpt";
 import { generateStrideReport } from "../lib/stride";
@@ -41,14 +41,38 @@ export default function UploadPage() {
   const [loadingComponents, setLoadingComponents] = useState(false);
   const [loadingStride, setLoadingStride] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [strideReportError, setStrideReportError] = useState<string | null>(
+    null
+  );
 
   const strideReportRef = useRef<HTMLDivElement>(null);
+
+  // Efeito para carregar dados do sessionStorage ao montar o componente
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      // Garante que está no ambiente do navegador
+      const cachedComponents = sessionStorage.getItem("cachedComponents");
+      const cachedStrideReport = sessionStorage.getItem("cachedStrideReport");
+
+      if (cachedComponents) {
+        setResult(JSON.parse(cachedComponents));
+      }
+      if (cachedStrideReport) {
+        setStrideReport(JSON.parse(cachedStrideReport));
+      }
+    }
+  }, []); // Array de dependências vazio para rodar apenas uma vez na montagem
 
   const handleRemoveFile = () => {
     setSelectedFile(null);
     setResult([]);
     setStrideReport([]);
     setError(null);
+    setStrideReportError(null);
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("cachedComponents");
+      sessionStorage.removeItem("cachedStrideReport");
+    }
   };
 
   const handleProcess = async () => {
@@ -73,6 +97,12 @@ export default function UploadPage() {
     setResult([]);
     setStrideReport([]);
     setError(null);
+    setStrideReportError(null);
+    if (typeof window !== "undefined") {
+      // Limpa o cache ao iniciar um novo processamento
+      sessionStorage.removeItem("cachedComponents");
+      sessionStorage.removeItem("cachedStrideReport");
+    }
 
     try {
       const componentResult = await extractComponentsFromImage(selectedFile);
@@ -92,10 +122,38 @@ export default function UploadPage() {
         );
       }
       setResult(components);
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("cachedComponents", JSON.stringify(components));
+      }
       setLoadingComponents(false);
 
       const stride = await generateStrideReport(components);
-      setStrideReport(stride);
+
+      console.log("Retorno de generateStrideReport:", stride);
+      console.log("É array?", Array.isArray(stride));
+
+      if (Array.isArray(stride)) {
+        setStrideReport(stride);
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("cachedStrideReport", JSON.stringify(stride));
+        }
+        setStrideReportError(null);
+      } else if (stride && stride.error) {
+        setStrideReport([]);
+        setStrideReportError(stride.error);
+        console.error(
+          "Erro no relatório STRIDE:",
+          stride.error,
+          "Conteúdo raw:",
+          stride.raw
+        );
+      } else {
+        setStrideReport([]);
+        setStrideReportError(
+          "Formato de relatório STRIDE inesperado. Verifique o console para mais detalhes."
+        );
+      }
+
       setLoadingStride(false);
     } catch (err) {
       setError(
@@ -110,6 +168,21 @@ export default function UploadPage() {
   };
 
   const MAX_WIDTH_CLASS = "max-w-6xl";
+
+  const getCriticidadeClass = (criticidade: string) => {
+    switch (criticidade?.toLowerCase()) {
+      case "crítica":
+        return "text-red-400 font-bold";
+      case "alta":
+        return "text-orange-400 font-bold";
+      case "média":
+        return "text-yellow-400";
+      case "baixa":
+        return "text-green-400";
+      default:
+        return "text-gray-400";
+    }
+  };
 
   return (
     <main className="min-h-screen p-4 sm:p-8 flex flex-col items-center bg-gray-950 font-sans text-gray-100">
@@ -209,7 +282,10 @@ export default function UploadPage() {
         </button>
       </section>
 
-      {(loadingOverall || result.length > 0 || strideReport.length > 0) && (
+      {(loadingOverall ||
+        result.length > 0 ||
+        strideReport.length > 0 ||
+        strideReportError) && (
         <section className={`w-full ${MAX_WIDTH_CLASS} animate-fade-in`}>
           <div className="flex flex-col lg:flex-row gap-8">
             <div className="flex-1 bg-gray-800 p-6 sm:p-8 rounded-xl shadow-lg border border-gray-700">
@@ -253,13 +329,27 @@ export default function UploadPage() {
               </div>
               {loadingStride ? (
                 <StrideSkeletonLoader />
+              ) : strideReportError ? (
+                <div
+                  className="bg-red-900 border border-red-700 text-red-300 px-4 py-3 rounded relative mt-4"
+                  role="alert"
+                >
+                  <strong className="font-bold">Erro no Relatório:</strong>
+                  <span className="block sm:inline ml-2">
+                    {strideReportError}
+                  </span>
+                  <p className="mt-2 text-sm text-red-200">
+                    Verifique o console para mais detalhes se este problema
+                    persistir.
+                  </p>
+                </div>
               ) : strideReport.length > 0 ? (
                 <div
                   ref={strideReportRef}
                   className="space-y-8 p-4 bg-gray-800 rounded-lg"
                 >
                   {" "}
-                  {strideReport.map((comp, i) => (
+                  {strideReport.map((comp: any, i: number) => (
                     <div
                       key={i}
                       className="p-5 bg-gray-700 rounded-lg border border-gray-600 last:mb-0"
@@ -272,27 +362,52 @@ export default function UploadPage() {
                         )
                       </h3>
                       <ul className="list-none space-y-4">
-                        {comp.ameacas.map((a: any, j: number) => (
-                          <li
-                            key={j}
-                            className="bg-gray-600 p-4 rounded-md shadow-sm border border-gray-500"
-                          >
-                            <p className="text-base mb-1">
-                              <strong className="text-red-400">
-                                {a.categoria}:
-                              </strong>{" "}
-                              <span className="text-gray-200">
-                                {a.descricao}
-                              </span>
-                            </p>
-                            <p className="text-sm text-gray-300">
-                              <strong className="text-gray-200">
-                                Contramedidas:
-                              </strong>{" "}
-                              {a.contramedidas}
-                            </p>
-                          </li>
-                        ))}
+                        {comp.ameacas &&
+                          comp.ameacas.map((a: any, j: number) => (
+                            <li
+                              key={j}
+                              className="bg-gray-600 p-4 rounded-md shadow-sm border border-gray-500"
+                            >
+                              <p className="text-base mb-1">
+                                <strong className="text-red-400">
+                                  {a.categoria}:
+                                </strong>{" "}
+                                <span className="text-gray-200">
+                                  {a.descricao}
+                                </span>
+                              </p>
+                              <p className="text-sm text-gray-300 mb-1">
+                                <strong className="text-gray-200">
+                                  Contramedidas:
+                                </strong>{" "}
+                                {a.contramedidas}
+                                {a.categoria && (
+                                  <Link
+                                    href={`/wiki/${a.categoria
+                                      .toLowerCase()
+                                      .replace(/\s/g, "-")}`}
+                                    className="text-teal-400 hover:underline ml-2"
+                                  >
+                                    (Saiba Mais)
+                                  </Link>
+                                )}
+                              </p>
+                              {a.criticidade && (
+                                <p className="text-sm">
+                                  <strong className="text-gray-200">
+                                    Criticidade:
+                                  </strong>{" "}
+                                  <span
+                                    className={getCriticidadeClass(
+                                      a.criticidade
+                                    )}
+                                  >
+                                    {a.criticidade}
+                                  </span>
+                                </p>
+                              )}
+                            </li>
+                          ))}
                       </ul>
                     </div>
                   ))}

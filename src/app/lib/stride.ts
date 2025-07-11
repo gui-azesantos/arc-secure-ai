@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
 export async function generateStrideReport(components: any[]): Promise<any> {
   const prompt = `
 Você é um especialista em segurança de sistemas. Avalie os componentes abaixo com base na metodologia STRIDE e gere um relatório de modelagem de ameaças no seguinte formato:
@@ -11,7 +12,8 @@ Você é um especialista em segurança de sistemas. Avalie os componentes abaixo
       {
         "categoria": "STRIDE (ex: Spoofing)",
         "descricao": "Breve explicação da ameaça",
-        "contramedidas": "Medidas de prevenção ou mitigação"
+        "contramedidas": "Medidas de prevenção ou mitigação",
+        "criticidade": "NÍVEL DE CRITICIDADE (ex: Baixa, Média, Alta, Crítica)"
       }
     ]
   }
@@ -38,6 +40,7 @@ Responda apenas com o JSON. Não inclua explicações.
         },
       ],
       max_tokens: 3000,
+      response_format: { type: "json_object" },
     }),
   });
 
@@ -50,8 +53,30 @@ Responda apenas com o JSON. Não inclua explicações.
       .replace(/```$/, "")
       .trim();
 
-    return JSON.parse(cleaned);
-  } catch {
-    return { raw: content };
+    const parsedData = JSON.parse(cleaned);
+
+    // Se a resposta da GPT vier encapsulada em um objeto com a chave "componentes",
+    // extraia o array diretamente. Caso contrário, retorne o que foi parseado.
+    if (parsedData && Array.isArray(parsedData.componentes)) {
+      return parsedData.componentes;
+    } else if (Array.isArray(parsedData)) {
+      // Se por algum motivo ele retornar o array diretamente (ideal)
+      return parsedData;
+    } else {
+      // Caso o formato seja inesperado, retorne um erro ou o raw content para depuração
+      console.error("Formato de resposta inesperado da IA:", parsedData);
+      return {
+        raw: content,
+        error: "Formato de relatório STRIDE inesperado da IA.",
+      };
+    }
+  } catch (e) {
+    console.error(
+      "Erro ao fazer parse do JSON da OpenAI:",
+      e,
+      "Conteúdo recebido:",
+      content
+    );
+    return { raw: content, error: "Falha ao parsear a resposta JSON da IA." };
   }
 }
