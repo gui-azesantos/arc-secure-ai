@@ -1,10 +1,12 @@
+// src/app/upload/page.tsx
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import DiagramSketchpad from "../components/DiagramSketchpad"; // Importar o novo componente
+import { useEffect, useState } from "react";
+import DiagramSketchpad from "../components/DiagramSketchpad";
 import { ImageUploader } from "../components/ImageUploader";
+import PdfExporterClient from "../components/PdfExporterClient";
 import { extractComponentsFromImage } from "../lib/gpt";
 import { generateStrideReport } from "../lib/stride";
 
@@ -45,11 +47,8 @@ export default function UploadPage() {
   const [strideReportError, setStrideReportError] = useState<string | null>(
     null
   );
-  const [inputMode, setInputMode] = useState<"upload" | "sketch">("upload"); // Novo estado para o modo de entrada
+  const [inputMode, setInputMode] = useState<"upload" | "sketch">("upload");
 
-  const strideReportRef = useRef<HTMLDivElement>(null);
-
-  // Efeito para carregar dados do sessionStorage ao montar o componente
   useEffect(() => {
     if (typeof window !== "undefined") {
       const cachedComponents = sessionStorage.getItem("cachedComponents");
@@ -76,10 +75,8 @@ export default function UploadPage() {
     }
   };
 
-  // Função para lidar com a imagem gerada pelo sketchpad
   const handleSketchpadImageGenerated = (imageFile: File | null) => {
     setSelectedFile(imageFile);
-    // Não processa automaticamente, aguarda o clique no botão "Analisar"
   };
 
   const handleProcess = async () => {
@@ -93,7 +90,6 @@ export default function UploadPage() {
     }
 
     const allowedTypes = ["image/jpeg", "image/png", "image/svg+xml"];
-    // Se o arquivo não veio do sketchpad (que sempre gera PNG), verifica o tipo
     if (inputMode === "upload" && !allowedTypes.includes(selectedFile.type)) {
       setError("Formato de arquivo inválido. Por favor, use JPEG, PNG ou SVG.");
       setSelectedFile(null);
@@ -195,6 +191,96 @@ export default function UploadPage() {
     }
   };
 
+  const exportToJson = () => {
+    if (!strideReport || strideReport.length === 0) {
+      alert("Nenhum relatório STRIDE para exportar para JSON.");
+      return;
+    }
+    const filename = "stride_report.json";
+    const jsonStr = JSON.stringify(strideReport, null, 2);
+    const blob = new Blob([jsonStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const exportToCsv = () => {
+    if (!strideReport || strideReport.length === 0) {
+      alert("Nenhum relatório STRIDE para exportar para CSV.");
+      return;
+    }
+
+    const headers = [
+      "Componente",
+      "Tipo Componente",
+      "Ameaça Categoria",
+      "Ameaça Descrição",
+      "Ameaça Criticidade",
+      "Ameaça Contramedidas",
+      "Sugestões de Arquitetura Segura",
+    ];
+
+    let csvContent = headers.join(";") + "\n";
+
+    strideReport.forEach((comp) => {
+      const componenteNome = comp.nome || "";
+      const componenteTipo = comp.tipo || "";
+      const sugestoesArquitetura = Array.isArray(
+        comp.sugestoesDeArquiteturaSegura
+      )
+        ? `"${comp.sugestoesDeArquiteturaSegura
+            .join(" | ")
+            .replace(/"/g, '""')}"`
+        : "";
+
+      if (
+        comp.ameacas &&
+        Array.isArray(comp.ameacas) &&
+        comp.ameacas.length > 0
+      ) {
+        comp.ameacas.forEach((ameaca: any) => {
+          const row = [
+            `"${componenteNome.replace(/"/g, '""')}"`,
+            `"${componenteTipo.replace(/"/g, '""')}"`,
+            `"${ameaca.categoria?.replace(/"/g, '""') || ""}"`,
+            `"${ameaca.descricao?.replace(/"/g, '""') || ""}"`,
+            `"${ameaca.criticidade?.replace(/"/g, '""') || ""}"`,
+            `"${ameaca.contramedidas?.replace(/"/g, '""') || ""}"`,
+            sugestoesArquitetura,
+          ];
+          csvContent += row.join(";") + "\n";
+        });
+      } else {
+        const emptyThreatRow = [
+          `"${componenteNome.replace(/"/g, '""')}"`,
+          `"${componenteTipo.replace(/"/g, '""')}"`,
+          "",
+          "",
+          "",
+          "",
+          sugestoesArquitetura,
+        ];
+        csvContent += emptyThreatRow.join(";") + "\n";
+      }
+    });
+
+    const filename = "stride_report.csv";
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <main className="min-h-screen p-4 sm:p-8 flex flex-col items-center bg-gray-950 font-sans text-gray-100">
       <header className={`w-full ${MAX_WIDTH_CLASS} text-center mb-10 mt-8`}>
@@ -229,8 +315,8 @@ export default function UploadPage() {
           <button
             onClick={() => {
               setInputMode("sketch");
-              setSelectedFile(null); // Limpa o arquivo selecionado ao mudar o modo
-              handleRemoveFile(); // Limpa resultados anteriores e cache
+              setSelectedFile(null);
+              handleRemoveFile();
             }}
             className={`py-2 px-6 rounded-lg font-bold transition-all duration-200 ${
               inputMode === "sketch"
@@ -239,7 +325,7 @@ export default function UploadPage() {
             }`}
             disabled={loadingOverall}
           >
-            Desenhar Diagrama ✏️ (Beta)
+            Desenhar Diagrama ✏️
           </button>
         </div>
 
@@ -328,7 +414,7 @@ export default function UploadPage() {
               Analisando...
             </>
           ) : (
-            "Analisar Diagrama" // Mudado o texto do botão
+            "Analisar Diagrama"
           )}
         </button>
       </section>
@@ -377,6 +463,30 @@ export default function UploadPage() {
                 <h2 className="text-2xl font-bold text-teal-400">
                   Relatório de Ameaças STRIDE
                 </h2>
+                {/* Botões de Exportação */}
+                {strideReport.length > 0 && (
+                  <div className="flex space-x-2">
+                    <PdfExporterClient
+                      strideReport={strideReport}
+                      fileName="relatorio_stride.pdf"
+                      getCriticidadeClass={getCriticidadeClass} // Passa a função de estilo
+                    />
+                    <button
+                      onClick={exportToJson}
+                      className="py-1 px-3 bg-gray-600 text-white text-sm rounded-md hover:bg-gray-700 transition-colors"
+                      title="Exportar para JSON"
+                    >
+                      JSON
+                    </button>
+                    <button
+                      onClick={exportToCsv}
+                      className="py-1 px-3 bg-gray-600 text-white text-sm rounded-md hover:bg-gray-700 transition-colors"
+                      title="Exportar para CSV"
+                    >
+                      CSV
+                    </button>
+                  </div>
+                )}
               </div>
               {loadingStride ? (
                 <StrideSkeletonLoader />
@@ -394,79 +504,102 @@ export default function UploadPage() {
                     persistir.
                   </p>
                 </div>
-              ) : strideReport.length > 0 ? (
+              ) : (
+                // O conteúdo do relatório agora é renderizado pelo PrintableReport
+                // E o PrintableReport não precisa mais de ref aqui
+                // (a ref é interna ao PdfExporterClient para o PDFDownloadLink)
+                // A exibição no HTML continua sendo um mapeamento normal, não o PrintableReport aqui.
+                // Vou re-introduzir o mapeamento direto do strideReport aqui para a exibição HTML.
                 <div
-                  ref={strideReportRef}
+                  // A ref para o print-to-pdf não vai mais aqui, ela é interna ao PrintableReport agora
+                  // Se você precisava de uma ref para outras coisas, ela teria que ser separada.
                   className="space-y-8 p-4 bg-gray-800 rounded-lg"
                 >
-                  {" "}
-                  {strideReport.map((comp: any, i: number) => (
-                    <div
-                      key={i}
-                      className="p-5 bg-gray-700 rounded-lg border border-gray-600 last:mb-0"
-                    >
-                      <h3 className="font-bold text-xl text-teal-300 mb-3">
-                        {comp.nome} (
-                        <span className="font-normal text-gray-400">
-                          {comp.tipo}
-                        </span>
-                        )
-                      </h3>
-                      <ul className="list-none space-y-4">
-                        {comp.ameacas &&
-                          comp.ameacas.map((a: any, j: number) => (
-                            <li
-                              key={j}
-                              className="bg-gray-600 p-4 rounded-md shadow-sm border border-gray-500"
-                            >
-                              <p className="text-base mb-1">
-                                <strong className="text-red-400">
-                                  {a.categoria}:
-                                </strong>{" "}
-                                <span className="text-gray-200">
-                                  {a.descricao}
-                                </span>
-                              </p>
-                              <p className="text-sm text-gray-300 mb-1">
-                                <strong className="text-gray-200">
-                                  Contramedidas:
-                                </strong>{" "}
-                                {a.contramedidas}
-                                {a.categoria && (
-                                  <Link
-                                    href={`/wiki/${a.categoria
-                                      .toLowerCase()
-                                      .replace(/\s/g, "-")}`}
-                                    className="text-teal-400 hover:underline ml-2"
-                                  >
-                                    (Saiba Mais)
-                                  </Link>
+                  {strideReport.length > 0 ? (
+                    strideReport.map((comp: any, i: number) => (
+                      <div
+                        key={i}
+                        className="p-5 bg-gray-700 rounded-lg border border-gray-600 last:mb-0"
+                      >
+                        <h3 className="font-bold text-xl text-teal-300 mb-3">
+                          {comp.nome} (
+                          <span className="font-normal text-gray-400">
+                            {comp.tipo}
+                          </span>
+                          )
+                        </h3>
+                        {comp.sugestoesDeArquiteturaSegura &&
+                          comp.sugestoesDeArquiteturaSegura.length > 0 && (
+                            <div className="mt-4 p-3 bg-gray-600 rounded-md border border-gray-500">
+                              <h4 className="font-semibold text-teal-200 mb-2">
+                                Sugestões de Arquitetura Segura:
+                              </h4>
+                              <ul className="list-disc list-inside text-gray-300 space-y-1 text-sm">
+                                {comp.sugestoesDeArquiteturaSegura.map(
+                                  (sug: string, sIdx: number) => (
+                                    <li key={sIdx}>{sug}</li>
+                                  )
                                 )}
-                              </p>
-                              {a.criticidade && (
-                                <p className="text-sm">
-                                  <strong className="text-gray-200">
-                                    Criticidade:
+                              </ul>
+                            </div>
+                          )}
+
+                        <ul className="list-none space-y-4 mt-4">
+                          {comp.ameacas &&
+                            comp.ameacas.map((a: any, j: number) => (
+                              <li
+                                key={j}
+                                className="bg-gray-600 p-4 rounded-md shadow-sm border border-gray-500"
+                              >
+                                <p className="text-base mb-1">
+                                  <strong className="text-red-400">
+                                    {a.categoria}:
                                   </strong>{" "}
-                                  <span
-                                    className={getCriticidadeClass(
-                                      a.criticidade
-                                    )}
-                                  >
-                                    {a.criticidade}
+                                  <span className="text-gray-200">
+                                    {a.descricao}
                                   </span>
                                 </p>
-                              )}
-                            </li>
-                          ))}
-                      </ul>
-                    </div>
-                  ))}
+                                <p className="text-sm text-gray-300 mb-1">
+                                  <strong className="text-gray-200">
+                                    Contramedidas:
+                                  </strong>{" "}
+                                  {a.contramedidas}
+                                  {a.categoria && (
+                                    <Link
+                                      href={`/wiki/${a.categoria
+                                        .toLowerCase()
+                                        .replace(/\s/g, "-")}`}
+                                      className="text-teal-400 hover:underline ml-2"
+                                    >
+                                      (Saiba Mais)
+                                    </Link>
+                                  )}
+                                </p>
+                                {a.criticidade && (
+                                  <p className="text-sm">
+                                    <strong className="text-gray-200">
+                                      Criticidade:
+                                    </strong>{" "}
+                                    <span
+                                      className={getCriticidadeClass(
+                                        a.criticidade
+                                      )}
+                                    >
+                                      {a.criticidade}
+                                    </span>
+                                  </p>
+                                )}
+                              </li>
+                            ))}
+                        </ul>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-400 text-center py-8">
+                      Nenhum relatório STRIDE gerado ainda.
+                    </p>
+                  )}
                 </div>
-              ) : (
-                <p className="text-gray-400 text-center py-8">
-                  Nenhum relatório STRIDE gerado ainda.
-                </p>
               )}
             </div>
           </div>
