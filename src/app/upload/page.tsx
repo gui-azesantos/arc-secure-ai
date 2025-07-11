@@ -47,10 +47,8 @@ export default function UploadPage() {
 
   const strideReportRef = useRef<HTMLDivElement>(null);
 
-  // Efeito para carregar dados do sessionStorage ao montar o componente
   useEffect(() => {
     if (typeof window !== "undefined") {
-      // Garante que está no ambiente do navegador
       const cachedComponents = sessionStorage.getItem("cachedComponents");
       const cachedStrideReport = sessionStorage.getItem("cachedStrideReport");
 
@@ -61,7 +59,7 @@ export default function UploadPage() {
         setStrideReport(JSON.parse(cachedStrideReport));
       }
     }
-  }, []); // Array de dependências vazio para rodar apenas uma vez na montagem
+  }, []);
 
   const handleRemoveFile = () => {
     setSelectedFile(null);
@@ -99,7 +97,6 @@ export default function UploadPage() {
     setError(null);
     setStrideReportError(null);
     if (typeof window !== "undefined") {
-      // Limpa o cache ao iniciar um novo processamento
       sessionStorage.removeItem("cachedComponents");
       sessionStorage.removeItem("cachedStrideReport");
     }

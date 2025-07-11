@@ -1,4 +1,4 @@
-// src/app/wiki/[slug]/page.tsx
+
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -13,10 +13,10 @@ interface WikiPageProps {
 export default function WikiPage({ params }: WikiPageProps) {
   const { slug } = params;
 
-  // Encontra o tópico correspondente ao slug
+
   const topic: WikiTopic | undefined = wikiTopics.find((t) => t.slug === slug);
 
-  // Se o tópico não for encontrado, exibe a página 404 do Next.js
+
   if (!topic) {
     notFound();
   }
@@ -77,7 +77,6 @@ export default function WikiPage({ params }: WikiPageProps) {
   );
 }
 
-// Opcional: Gerar caminhos estáticos para slugs conhecidos (melhora o SEO e performance)
 export async function generateStaticParams() {
   return wikiTopics.map((topic) => ({
     slug: topic.slug,

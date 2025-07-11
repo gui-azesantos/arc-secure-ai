@@ -1,4 +1,3 @@
-// src/app/lib/wikiContent.ts
 
 export interface WikiTopic {
   slug: string;
@@ -127,18 +126,4 @@ export const wikiTopics: WikiTopic[] = [
       },
     ],
   },
-  // Você pode adicionar mais tópicos aqui, por exemplo:
-  // {
-  //   slug: "sql-injection",
-  //   title: "SQL Injection: Ataques de Injeção SQL",
-  //   description: "Exploração de vulnerabilidades em aplicações que constroem consultas SQL dinamicamente.",
-  //   details: [
-  //     "**O que é:** Inserção de código SQL malicioso em campos de entrada de uma aplicação para manipular o banco de dados.",
-  //     "**Exemplos:** Acesso, modificação ou exclusão de dados não autorizados.",
-  //     "**Impacto:** Vazamento de dados, corrupção de dados, negação de serviço.",
-  //   ],
-  //   externalLinks: [
-  //     { name: "OWASP - SQL Injection", url: "https://owasp.org/www-community/attacks/SQL_Injection" }
-  //   ]
-  // }
 ];

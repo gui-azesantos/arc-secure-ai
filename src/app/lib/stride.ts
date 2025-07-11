@@ -55,15 +55,12 @@ Responda apenas com o JSON. Não inclua explicações.
 
     const parsedData = JSON.parse(cleaned);
 
-    // Se a resposta da GPT vier encapsulada em um objeto com a chave "componentes",
-    // extraia o array diretamente. Caso contrário, retorne o que foi parseado.
+
     if (parsedData && Array.isArray(parsedData.componentes)) {
       return parsedData.componentes;
     } else if (Array.isArray(parsedData)) {
-      // Se por algum motivo ele retornar o array diretamente (ideal)
       return parsedData;
     } else {
-      // Caso o formato seja inesperado, retorne um erro ou o raw content para depuração
       console.error("Formato de resposta inesperado da IA:", parsedData);
       return {
         raw: content,
