@@ -1,21 +1,13 @@
 
-
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { WikiTopic, wikiTopics } from "../../lib/wikiContent";
 
-interface WikiPageProps {
-  params: {
-    slug: string;
-  };
-}
-
-export default function WikiPage({ params }: WikiPageProps) {
-  const { slug } = params;
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export default function WikiPage({ params }: { params: any }) {
+  const slug = params.slug; 
 
   const topic: WikiTopic | undefined = wikiTopics.find((t) => t.slug === slug);
-
 
   if (!topic) {
     notFound();
@@ -38,7 +30,6 @@ export default function WikiPage({ params }: WikiPageProps) {
         <div className="space-y-4 mb-8">
           {topic.details.map((detail, index) => (
             <p key={index} className="text-gray-200 leading-relaxed">
-              {/* Permite formatação simples como negrito (**) */}
               <span
                 dangerouslySetInnerHTML={{
                   __html: detail.replace(
