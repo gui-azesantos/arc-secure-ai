@@ -1,4 +1,3 @@
-// src/app/upload/page.tsx
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -233,9 +232,9 @@ export default function UploadPage() {
       const sugestoesArquitetura = Array.isArray(
         comp.sugestoesDeArquiteturaSegura
       )
-        ? `"${comp.sugestoesDeArquiteturaSegura
+        ? comp.sugestoesDeArquiteturaSegura
+            .map((sug: string) => sug.replace(/"/g, '""'))
             .join(" | ")
-            .replace(/"/g, '""')}"`
         : "";
 
       if (
@@ -245,32 +244,37 @@ export default function UploadPage() {
       ) {
         comp.ameacas.forEach((ameaca: any) => {
           const row = [
-            `"${componenteNome.replace(/"/g, '""')}"`,
-            `"${componenteTipo.replace(/"/g, '""')}"`,
-            `"${ameaca.categoria?.replace(/"/g, '""') || ""}"`,
-            `"${ameaca.descricao?.replace(/"/g, '""') || ""}"`,
-            `"${ameaca.criticidade?.replace(/"/g, '""') || ""}"`,
-            `"${ameaca.contramedidas?.replace(/"/g, '""') || ""}"`,
+            componenteNome,
+            componenteTipo,
+            ameaca.categoria || "",
+            ameaca.descricao || "",
+            ameaca.criticidade || "",
+            ameaca.contramedidas || "",
             sugestoesArquitetura,
-          ];
+          ].map((field) => `"${String(field).replace(/"/g, '""')}"`); // Garante que todos os campos são strings e escapa aspas
+
           csvContent += row.join(";") + "\n";
         });
       } else {
         const emptyThreatRow = [
-          `"${componenteNome.replace(/"/g, '""')}"`,
-          `"${componenteTipo.replace(/"/g, '""')}"`,
+          componenteNome,
+          componenteTipo,
           "",
           "",
           "",
           "",
           sugestoesArquitetura,
-        ];
+        ].map((field) => `"${String(field).replace(/"/g, '""')}"`);
+
         csvContent += emptyThreatRow.join(";") + "\n";
       }
     });
 
     const filename = "stride_report.csv";
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const utf8Bom = "\uFEFF";
+    const blob = new Blob([utf8Bom + csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -463,13 +467,12 @@ export default function UploadPage() {
                 <h2 className="text-2xl font-bold text-teal-400">
                   Relatório de Ameaças STRIDE
                 </h2>
-                {/* Botões de Exportação */}
                 {strideReport.length > 0 && (
                   <div className="flex space-x-2">
                     <PdfExporterClient
                       strideReport={strideReport}
                       fileName="relatorio_stride.pdf"
-                      getCriticidadeClass={getCriticidadeClass} // Passa a função de estilo
+                      getCriticidadeClass={getCriticidadeClass}
                     />
                     <button
                       onClick={exportToJson}
@@ -505,16 +508,7 @@ export default function UploadPage() {
                   </p>
                 </div>
               ) : (
-                // O conteúdo do relatório agora é renderizado pelo PrintableReport
-                // E o PrintableReport não precisa mais de ref aqui
-                // (a ref é interna ao PdfExporterClient para o PDFDownloadLink)
-                // A exibição no HTML continua sendo um mapeamento normal, não o PrintableReport aqui.
-                // Vou re-introduzir o mapeamento direto do strideReport aqui para a exibição HTML.
-                <div
-                  // A ref para o print-to-pdf não vai mais aqui, ela é interna ao PrintableReport agora
-                  // Se você precisava de uma ref para outras coisas, ela teria que ser separada.
-                  className="space-y-8 p-4 bg-gray-800 rounded-lg"
-                >
+                <div className="space-y-8 p-4 bg-gray-800 rounded-lg">
                   {strideReport.length > 0 ? (
                     strideReport.map((comp: any, i: number) => (
                       <div

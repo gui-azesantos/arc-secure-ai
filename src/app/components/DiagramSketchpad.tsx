@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// src/app/components/DiagramSketchpad.tsx
 "use client";
 
 import Konva from "konva";
@@ -17,33 +16,31 @@ const DiagramSketchpad: React.FC<DiagramSketchpadProps> = ({
   isLoading,
 }) => {
   const stageRef = useRef<Konva.Stage>(null);
-  const [lines, setLines] = useState<any[]>([]); // Para linhas de caneta
-  const [rectangles, setRectangles] = useState<any[]>([]); // Para retângulos
-  const [texts, setTexts] = useState<any[]>([]); // Para texto
-  const [arrows, setArrows] = useState<any[]>([]); // Para setas
+  const [lines, setLines] = useState<any[]>([]);
+  const [rectangles, setRectangles] = useState<any[]>([]); 
+  const [texts, setTexts] = useState<any[]>([]);
+  const [arrows, setArrows] = useState<any[]>([]); 
 
   const [tool, setTool] = useState<"pen" | "rectangle" | "text" | "arrow">(
     "pen"
   );
   const [isDrawing, setIsDrawing] = useState(false);
-  const [_, setCurrentLine] = useState<number[]>([]); // Usado para desenho de linha contínua (pen)
-  const [currentRectProps, setCurrentRectProps] = useState<any>(null); // Propriedades do retângulo em desenho
-  const [currentArrowPoints, setCurrentArrowPoints] = useState<number[]>([]); // Pontos da seta em desenho
+  const [_, setCurrentLine] = useState<number[]>([]); 
+  const [currentRectProps, setCurrentRectProps] = useState<any>(null);
+  const [currentArrowPoints, setCurrentArrowPoints] = useState<number[]>([]);
 
   const width = 600;
   const height = 400;
 
-  // Função para gerar a imagem do stage Konva
   const generateImage = useCallback(() => {
     const stage = stageRef.current;
     if (stage) {
       const dataURL = stage.toDataURL({
         mimeType: "image/png",
         quality: 1,
-        pixelRatio: 2, // Melhor qualidade para análise da IA
+        pixelRatio: 2, 
       });
 
-      // Converte Data URL para File
       fetch(dataURL)
         .then((res) => res.blob())
         .then((blob) => {
@@ -58,15 +55,12 @@ const DiagramSketchpad: React.FC<DiagramSketchpadProps> = ({
     }
   }, [onImageGenerated]);
 
-  // Efeito para gerar a imagem automaticamente sempre que o desenho muda
   useEffect(() => {
-    // Adicione um pequeno delay para evitar muitas chamadas seguidas
     const timeout = setTimeout(() => {
       if (!isDrawing) {
-        // Só gera a imagem quando o desenho está finalizado (não contínuo)
         generateImage();
       }
-    }, 300); // Ajuste este valor conforme necessário
+    }, 300);
 
     return () => clearTimeout(timeout);
   }, [lines, rectangles, texts, arrows, isDrawing, generateImage]);
@@ -127,7 +121,6 @@ const DiagramSketchpad: React.FC<DiagramSketchpadProps> = ({
     if (tool === "pen") {
       const lastLine = lines[lines.length - 1];
       if (!lastLine) return;
-      // Adiciona o novo ponto à linha existente
       lastLine.points = lastLine.points.concat([pos.x, pos.y]);
       setLines([...lines.slice(0, lines.length - 1), lastLine]);
     } else if (tool === "rectangle" && currentRectProps) {
@@ -162,7 +155,7 @@ const DiagramSketchpad: React.FC<DiagramSketchpadProps> = ({
       ]);
       setCurrentArrowPoints([]);
     }
-    generateImage(); // Gerar imagem final após soltar o mouse (para retângulos e setas)
+    generateImage();
   };
 
   const clearCanvas = useCallback(() => {
@@ -173,7 +166,7 @@ const DiagramSketchpad: React.FC<DiagramSketchpadProps> = ({
     setCurrentLine([]);
     setCurrentRectProps(null);
     setCurrentArrowPoints([]);
-    onImageGenerated(null); // Limpa a imagem gerada também
+    onImageGenerated(null);
   }, [onImageGenerated]);
 
   return (
@@ -302,7 +295,6 @@ const DiagramSketchpad: React.FC<DiagramSketchpadProps> = ({
               strokeWidth={3}
             />
           )}
-          {/* Setas finalizadas */}
           {arrows.map((arrow, i) => (
             <React.Fragment key={i}>
               <Line
@@ -310,11 +302,10 @@ const DiagramSketchpad: React.FC<DiagramSketchpadProps> = ({
                 stroke={arrow.stroke}
                 strokeWidth={arrow.strokeWidth}
               />
-              {/* Ponta da seta - desenhada via Konva.Line com pontos específicos */}
               <Line
                 points={[
                   arrow.points[2],
-                  arrow.points[3], // ponto final
+                  arrow.points[3], 
                   arrow.points[2] -
                     10 *
                       Math.cos(

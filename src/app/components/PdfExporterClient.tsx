@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// src/app/components/PdfExporterClient.tsx
 "use client";
 
 import {

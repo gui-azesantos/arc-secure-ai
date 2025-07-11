@@ -1,22 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// src/app/components/PrintableReport.tsx
 "use client";
 
 import React from "react";
 
-// Define as props que este componente receberá (o relatório STRIDE e outros dados)
 interface PrintableReportProps {
-  strideReport: any[]; // O array de dados do relatório STRIDE
-  getCriticidadeClass: (criticidade: string) => string; // Função para classes CSS da criticidade
-  // Adicione outras props se o seu relatório precisar de mais dados de fora
+  strideReport: any[];
+  getCriticidadeClass: (criticidade: string) => string; 
 }
 
-// Usamos React.forwardRef para que este componente possa receber uma referência (ref)
-// diretamente do componente pai (UploadPage)
+
 const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportProps>(
   ({ strideReport, getCriticidadeClass }, ref) => {
     return (
-      // Este div é o elemento que será impresso
       <div ref={ref} className="space-y-8 p-4 bg-gray-800 rounded-lg">
         {strideReport.length > 0 ? (
           strideReport.map((comp: any, i: number) => (
@@ -60,7 +55,6 @@ const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportProps>(
                           Contramedidas:
                         </strong>{" "}
                         {a.contramedidas}
-                        {/* O link para a Wiki pode ser removido no print se desejar, ou mantido */}
                       </p>
                       {a.criticidade && (
                         <p className="text-sm">
@@ -87,6 +81,6 @@ const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportProps>(
   }
 );
 
-PrintableReport.displayName = "PrintableReport"; // Bom para depuração em React DevTools
+PrintableReport.displayName = "PrintableReport";
 
 export default PrintableReport;

@@ -1,6 +1,4 @@
-// src/app/lib/stride.ts
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
 export async function generateStrideReport(components: any[]): Promise<any> {
   const prompt = `
 Você é um especialista em segurança de sistemas e arquitetura. Avalie os componentes abaixo com base na metodologia STRIDE.
@@ -56,6 +54,18 @@ Responda apenas com o JSON. Não inclua explicações ou texto adicional.
   const data = await res.json();
   const content = data.choices?.[0]?.message?.content;
 
+  if (!content) {
+    console.error(
+      "API da OpenAI retornou conteúdo nulo ou vazio. Resposta completa da API:",
+      data
+    );
+    return {
+      raw: content,
+      error:
+        "A API da OpenAI não retornou um conteúdo válido. Verifique sua chave da API ou tente novamente.",
+    };
+  }
+
   try {
     const cleaned = content
       .replace(/^```json/, "")
@@ -64,18 +74,13 @@ Responda apenas com o JSON. Não inclua explicações ou texto adicional.
 
     const parsedData = JSON.parse(cleaned);
 
-    // --- LÓGICA DE PARSEAMENTO ATUALIZADA ---
     if (parsedData && Array.isArray(parsedData.result)) {
-      // Se a IA encapsular em uma chave "result"
       return parsedData.result;
     } else if (parsedData && Array.isArray(parsedData.componentes)) {
-      // Se a IA encapsular em uma chave "componentes" (formato anterior)
       return parsedData.componentes;
     } else if (Array.isArray(parsedData)) {
-      // Se a IA retornar o array diretamente (formato ideal)
       return parsedData;
     } else {
-      // Caso o formato seja totalmente inesperado
       console.error("Formato de resposta inesperado da IA:", parsedData);
       return {
         raw: content,

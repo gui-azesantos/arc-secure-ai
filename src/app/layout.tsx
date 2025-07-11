@@ -1,4 +1,3 @@
-
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import Link from "next/link";
@@ -18,6 +17,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
+      <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />{" "}
+      </head>
       <body className={inter.className}>
         <nav className="bg-gray-900 p-4 shadow-lg">
           <div className="max-w-6xl mx-auto flex justify-between items-center">
