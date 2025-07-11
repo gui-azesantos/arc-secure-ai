@@ -134,10 +134,7 @@ export default function UploadPage() {
       setLoadingComponents(false);
 
       const stride = await generateStrideReport(components);
-
-      console.log("Retorno de generateStrideReport:", stride);
-      console.log("É array?", Array.isArray(stride));
-
+      
       if (Array.isArray(stride)) {
         setStrideReport(stride);
         if (typeof window !== "undefined") {

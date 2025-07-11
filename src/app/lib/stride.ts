@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
 export async function generateStrideReport(components: any[]): Promise<any> {
   const prompt = `
 Você é um especialista em segurança de sistemas e arquitetura. Avalie os componentes abaixo com base na metodologia STRIDE.
@@ -39,7 +40,7 @@ Responda apenas com o JSON. Não inclua explicações ou texto adicional.
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo",
       messages: [
         {
           role: "user",
@@ -74,18 +75,27 @@ Responda apenas com o JSON. Não inclua explicações ou texto adicional.
 
     const parsedData = JSON.parse(cleaned);
 
-    if (parsedData && Array.isArray(parsedData.result)) {
+    if (Array.isArray(parsedData)) {
+      return parsedData;
+    } else if (parsedData && Array.isArray(parsedData.result)) {
       return parsedData.result;
     } else if (parsedData && Array.isArray(parsedData.componentes)) {
       return parsedData.componentes;
-    } else if (Array.isArray(parsedData)) {
-      return parsedData;
+    } else if (
+      parsedData &&
+      typeof parsedData === "object" &&
+      parsedData !== null
+    ) {
+      console.warn(
+        "API da OpenAI retornou um único objeto em vez de um array. Envolvendo em array."
+      );
+      return [parsedData];
     } else {
       console.error("Formato de resposta inesperado da IA:", parsedData);
       return {
         raw: content,
         error:
-          "Formato de relatório STRIDE inesperado da IA. Nenhuma chave de array reconhecida (e.g., 'result', 'componentes').",
+          "Formato de relatório STRIDE inesperado da IA. Nenhuma chave de array reconhecida.",
       };
     }
   } catch (e) {
